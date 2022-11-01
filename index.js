@@ -3,31 +3,36 @@ const app = express()
 const logger = require('./loggerMiddleware')
 const cors = require('cors')
 const nodemailer = require('nodemailer')
+const {generatePdf} = require ('./helpers/pdf/generatePdf')
 
 
-
-async function sendMail(jurisdiccion, institucion, mail) {
-    // Generate test SMTP service account from ethereal.email
-    // Only needed if you don't have a real mail account for testing
-    let testAccount = await nodemailer.createTestAccount()
-  
+//MAIL
+async function sendMail(jurisdiccion, institucion, mail, data) {
+    
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
-        secure: true, // true for 465, false for other ports
+        secure: true, 
         auth: {
-            user: 'manzanadeisaac@gmail.com', // generated ethereal user
-            pass: 'veesnffhycqikycg', // generated ethereal password
+            user: 'manzanadeisaac@gmail.com', 
+            pass: 'veesnffhycqikycg', 
         },
     })
-  
-    // send mail with defined transport object
+    
+    generatePdf(jurisdiccion, institucion, mail, data)
+   
     let info = await transporter.sendMail({
-        from: 'Boletín de lista de metas', // sender address
-        to: mail, // list of receivers
-        subject: 'Boletín', // Subject line
-        text: 'Lista de metas', // plain text body
+        attachments: [
+            {
+                filename: 'Boletin.pdf',
+                path: __dirname + '/helpers/pdf/pdfs/pdfTest.pdf',
+            },
+        ],
+        from: 'Boletín de lista de metas', 
+        to: mail, 
+        subject: 'Boletín', 
+        text: 'Lista de metas', 
         html: `
       <table style="max-width: 600px; padding: 10px; margin:0 auto; border-collapse: collapse;">
           <tr>
@@ -45,13 +50,9 @@ async function sendMail(jurisdiccion, institucion, mail) {
       </table>
           `
     })
-  
-    console.log('Message sent: %s', info.messageId)
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-  
-    // Preview only available when sending through an Ethereal account
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info))
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+
+    return info
+
 }
 
 
@@ -60,91 +61,113 @@ app.use(express.json())
 
 app.use(logger)
 
-let notes = [
-    {
-        'id': 1,
-        'content': 'Tengo que suscribirme a Boca juniors',
-        'date': '2019-05-30T17:30:31.098Z',
-        'important': true
-    },
-    {
-        'id': 2,
-        'content': 'Tengo que suscribirme ya!',
-        'date': '2019-08-26T17:30:31.098Z',
-        'important': false
-    },
-    {
-        'id': 3,
-        'content': 'Tengo que suscribirme a ASD123',
-        'date': '2020-05-30T17:30:31.098Z',
-        'important': true
-    }
-]
+// let notes = [
+//     {
+//         'id': 1,
+//         'content': 'Tengo que suscribirme a Boca juniors',
+//         'date': '2019-05-30T17:30:31.098Z',
+//         'important': true
+//     },
+//     {
+//         'id': 2,
+//         'content': 'Tengo que suscribirme ya!',
+//         'date': '2019-08-26T17:30:31.098Z',
+//         'important': false
+//     },
+//     {
+//         'id': 3,
+//         'content': 'Tengo que suscribirme a ASD123',
+//         'date': '2020-05-30T17:30:31.098Z',
+//         'important': true
+//     }
+// ]
 
 
 let metas = [
     {
         'id': 1,
-        'metas': ['meta1', 'meta2', 'meta3'],
+        'listaDeMetas': [
+            {
+                'dispositivo': 'Aire acondiconado',
+                'meta': 'Consumir menos de 15235 Watts',
+                'fecha': '31/11/22'
+            },
+            {
+                'dispositivo': 'Estufa electrica',
+                'meta': 'Consumir menos de 500 pesos en gas',
+                'fecha': '30/11/22'
+            },
+            {
+                'dispositivo': 'Estufa electrica',
+                'meta': 'Consumir menos de 500 pesos en gas',
+                'fecha': '31/12/22'
+            },
+        ],
         'date': '2019-05-30T17:30:31.098Z',
     },
     {
         'id': 2,
-        'metas': ['meta1', 'meta2', 'meta3'],
+        'listaDeMetas': [
+            {
+                'dispositivo': 'Aire acondiconado',
+                'meta': 'Consumir menos de 15235 Watts',
+                'fecha': '31/11/22'
+            },
+            {
+                'dispositivo': 'Estufa electrica',
+                'meta': 'Consumir menos de 500 pesos en gas',
+                'fecha': '30/11/22'
+            },
+            {
+                'dispositivo': 'Estufa electrica',
+                'meta': 'Consumir menos de 500 pesos en gas',
+                'fecha': '31/12/22'
+            },
+        ],
         'date': '2019-05-30T17:30:31.098Z',
     },
     {
         'id': 3,
-        'metas': ['meta1', 'meta2', 'meta3'],
+        'listaDeMetas': [
+            {
+                'dispositivo': 'Aire acondiconado',
+                'meta': 'Consumir menos de 15235 Watts',
+                'fecha': '31/11/22'
+            },
+            {
+                'dispositivo': 'Estufa electrica',
+                'meta': 'Consumir menos de 500 pesos en gas',
+                'fecha': '30/11/22'
+            },
+            {
+                'dispositivo': 'Estufa electrica',
+                'meta': 'Consumir menos de 500 pesos en gas',
+                'fecha': '31/12/22'
+            },
+        ],
         'date': '2019-05-30T17:30:31.098Z',
-    }
+    },
 ]
 
-// const app = http.createServer((request, response) => {
-//     response.writeHead(200, {'Content-Type': 'application/json'})
-//     response.end(JSON.stringify(notes))
-// })
+
 
 app.get('/', (request, response) =>{
     response.send('<h1>Hello world<h1>')
 
 })
 
-// app.get('/api/notes', (request, response, next) =>{
-//     response.json(notes)
-//     next()
-// })
 
-// app.get('/api/notes/:id', (request, response) => {
-//     const id = Number(request.params.id)
-//     const note = notes.find( note => note.id === id)
 
-//     if(note){
-//         response.json(note)
-//     } else {
-//         response.status(404).end()
-//     }
-// })
-
-// app.delete('/api/notes/:id', (request, response) => {
-//     const id = Number(request.params.id)
-//     notes = notes.filter( note => note.id != id)
-//     response.status(204).end()
-// })
-
-app.post('/api/metasvigentes/:jurisdiccion/:institucion/:mail', (request, response) => {
+app.post('/api/metasVigentes/:jurisdiccion/:institucion/:mail', (request, response) => {
     //const note = request.body
     const jurisdiccion = request.params.jurisdiccion
     const institucion = request.params.institucion
     const mail = request.params.mail
-
-
     const meta = request.body
-
-
-    if (!meta || !meta.metas){
+    
+    if (!meta || !meta.listaDeMetas){
         return response.status(400).json({
-            error: 'Meta content is missing'
+            error: 'listaDeMetas content is missing'
         })
     }
 
@@ -153,13 +176,12 @@ app.post('/api/metasvigentes/:jurisdiccion/:institucion/:mail', (request, respon
 
     const newMeta = {
         id: maxId +1,
-        content: meta.metas,
+        metas: meta.metas,
         date: new Date().toISOString()
     }
 
-    //notes = [... notes, newNote]
     metas = metas.concat(newMeta)
-    sendMail(jurisdiccion, institucion, mail)
+    sendMail(jurisdiccion, institucion, mail, meta)
     response.status(201).json(newMeta)
 })
 
