@@ -5,8 +5,8 @@ const styles = require('./styles')
 const { llenarPdf } = require('./pdf-plantilla')
 const {boletinMetasVigentes} = require ('../plantillas/boletin-metas-vigentes.js')
 //asadasd
-const generatePdf = async (jurisdiccion, institucion, mail, data) => {
-    const docDefinition = await boletinMetasVigentes(jurisdiccion, institucion, mail, data)
+const generatePdf = async (jurisdiccion, institucion, data) => {
+    const docDefinition = await boletinMetasVigentes(jurisdiccion, institucion, data)
     const printer = new PdfPrinter(fonts)
 
     let pdfDoc = await printer.createPdfKitDocument(docDefinition)

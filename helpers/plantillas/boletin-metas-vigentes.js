@@ -28,7 +28,8 @@ function buildTableBody(data, columns) {
     return body
 }
 
-const boletinMetasVigentes = async (jurisdiccion, institucion, mail, data) => {
+const boletinMetasVigentes = async (jurisdiccion, institucion, data) => {
+
     var boletinPromedioNumerico = {
         content: [
             {
@@ -192,9 +193,11 @@ const boletinMetasVigentes = async (jurisdiccion, institucion, mail, data) => {
                                 ],
                             },
                             {
-                                text: `Dispositivo: ${ JSON.stringify(data.listaDeMetas[0].dispositivo) }
-                                meta: ${ JSON.stringify(data.listaDeMetas[0].meta) }
-                                fecha: ${ JSON.stringify(data.listaDeMetas[0].fecha) }`,
+                                text: `Tipo de meta: ${JSON.stringify(data.type)}
+                                Dispositivo: ${ JSON.stringify(data.dispositivo) }
+                                meta: ${ JSON.stringify(data.meta) }
+                                acciones: ${ JSON.stringify(data.acciones[0]) }
+                                fecha: ${ JSON.stringify(data.fecha) }`,
     
                                 nodeName: 'P',
                                 margin: [0, 5, 0, 60],
@@ -205,32 +208,7 @@ const boletinMetasVigentes = async (jurisdiccion, institucion, mail, data) => {
                                     'informacion',
                                 ],
                             },
-                            {
-                                text: `Dispositivo: ${ JSON.stringify(data.listaDeMetas[1].dispositivo) }
-                                meta: ${ JSON.stringify(data.listaDeMetas[1].meta) }
-                                fecha: ${ JSON.stringify(data.listaDeMetas[1].fecha) }`,
-                                nodeName: 'P',
-                                margin: [0, 5, 0, 60],
-                                style: [
-                                    'textoInformativo',
-                                    'html-p',
-                                    'html-div',
-                                    'informacion',
-                                ],
-                            },
-                            {
-                                text: `Dispositivo: ${ JSON.stringify(data.listaDeMetas[2].dispositivo) }
-                                meta: ${ JSON.stringify(data.listaDeMetas[2].meta) }
-                                fecha: ${ JSON.stringify(data.listaDeMetas[2].fecha) }`,
-                                nodeName: 'P',
-                                margin: [0, 5, 0, 60],
-                                style: [
-                                    'textoInformativo',
-                                    'html-p',
-                                    'html-div',
-                                    'informacion',
-                                ],
-                            },
+                        
                             {
                                 text: ' ',
                                 style: ['html-div', 'informacion'],

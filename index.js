@@ -4,10 +4,12 @@ const logger = require('./loggerMiddleware')
 const cors = require('cors')
 const nodemailer = require('nodemailer')
 const {generatePdf} = require ('./helpers/pdf/generatePdf')
+const fs = require('fs').promises
+const TelegramBot = require('node-telegram-bot-api')
 
 
 //MAIL
-async function sendMail(jurisdiccion, institucion, mail, data) {
+async function sendMail(jurisdiccion, institucion, data, mail) {
     
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
@@ -20,7 +22,7 @@ async function sendMail(jurisdiccion, institucion, mail, data) {
         },
     })
     
-    generatePdf(jurisdiccion, institucion, mail, data)
+    generatePdf(jurisdiccion, institucion, data)
    
     let info = await transporter.sendMail({
         attachments: [
@@ -50,10 +52,33 @@ async function sendMail(jurisdiccion, institucion, mail, data) {
       </table>
           `
     })
-
     return info
-
 }
+
+async function sendTelegram (jurisdiccion, institucion, data, telegram) {
+    const token = '5469916650:AAHjJZCpDDqAhdg6pcgI5rydWquaQ1qHl_4'
+    const bot = new TelegramBot(token, { polling: true })
+    
+
+    generatePdf(jurisdiccion, institucion, data)
+
+    
+
+    try {
+        async function loadMonoCounter() {
+            const boletin = await fs.readFile(__dirname + '/helpers/pdf/pdfs/pdfTest.pdf')
+            return Buffer.from(boletin)
+        }
+        
+        const file = await loadMonoCounter()
+        bot.sendDocument(telegram, file)
+
+    } catch (TelegramResponseException) {
+        return 'Error'
+    }
+}
+
+
 
 
 app.use(cors())
@@ -61,94 +86,18 @@ app.use(express.json())
 
 app.use(logger)
 
-// let notes = [
-//     {
-//         'id': 1,
-//         'content': 'Tengo que suscribirme a Boca juniors',
-//         'date': '2019-05-30T17:30:31.098Z',
-//         'important': true
-//     },
-//     {
-//         'id': 2,
-//         'content': 'Tengo que suscribirme ya!',
-//         'date': '2019-08-26T17:30:31.098Z',
-//         'important': false
-//     },
-//     {
-//         'id': 3,
-//         'content': 'Tengo que suscribirme a ASD123',
-//         'date': '2020-05-30T17:30:31.098Z',
-//         'important': true
-//     }
-// ]
 
 
-let metas = [
-    {
-        'id': 1,
-        'listaDeMetas': [
-            {
-                'dispositivo': 'Aire acondiconado',
-                'meta': 'Consumir menos de 15235 Watts',
-                'fecha': '31/11/22'
-            },
-            {
-                'dispositivo': 'Estufa electrica',
-                'meta': 'Consumir menos de 500 pesos en gas',
-                'fecha': '30/11/22'
-            },
-            {
-                'dispositivo': 'Estufa electrica',
-                'meta': 'Consumir menos de 500 pesos en gas',
-                'fecha': '31/12/22'
-            },
-        ],
-        'date': '2019-05-30T17:30:31.098Z',
-    },
-    {
-        'id': 2,
-        'listaDeMetas': [
-            {
-                'dispositivo': 'Aire acondiconado',
-                'meta': 'Consumir menos de 15235 Watts',
-                'fecha': '31/11/22'
-            },
-            {
-                'dispositivo': 'Estufa electrica',
-                'meta': 'Consumir menos de 500 pesos en gas',
-                'fecha': '30/11/22'
-            },
-            {
-                'dispositivo': 'Estufa electrica',
-                'meta': 'Consumir menos de 500 pesos en gas',
-                'fecha': '31/12/22'
-            },
-        ],
-        'date': '2019-05-30T17:30:31.098Z',
-    },
-    {
-        'id': 3,
-        'listaDeMetas': [
-            {
-                'dispositivo': 'Aire acondiconado',
-                'meta': 'Consumir menos de 15235 Watts',
-                'fecha': '31/11/22'
-            },
-            {
-                'dispositivo': 'Estufa electrica',
-                'meta': 'Consumir menos de 500 pesos en gas',
-                'fecha': '30/11/22'
-            },
-            {
-                'dispositivo': 'Estufa electrica',
-                'meta': 'Consumir menos de 500 pesos en gas',
-                'fecha': '31/12/22'
-            },
-        ],
-        'date': '2019-05-30T17:30:31.098Z',
-    },
-]
-
+let metas = 
+{
+    'type': 'vigentes',
+    'mails': ['asd123@gmail.com', 'psdfo@gmail.com', 'asdasad'],
+    'dispositivo': 'Aire acondiconado',
+    'meta': 'Consumir menos de 15235 Watts',
+    'acciones': ['Dejar el aire en 24°', 'Apagar las luces al salir del aula', 'afn fgdngdn dfjgdj'],
+    'fecha': '31/11/22'
+}
+           
 
 
 app.get('/', (request, response) =>{
@@ -156,32 +105,64 @@ app.get('/', (request, response) =>{
 
 })
 
+//funcion para esperar por cada email enviado para evitar problemas de envios masivos en el servicio
+function enviarMail(jurisdiccion, institucion, bodyRequest){
+    
+    function sleep(milliseconds) {  
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    }
+    async function fun() {
+        for(let i = 0; i<JSON.stringify(bodyRequest.mails.length);i++) {          
+            await sleep(4000)
+            console.log('Enviando mail a ' + JSON.stringify(bodyRequest.mails[i]))
+            sendMail(jurisdiccion, institucion, bodyRequest, JSON.stringify(bodyRequest.mails[i]))
+        }
+    }
+    fun()
+}
+
+//funcion para esperar por cada telegram enviado para evitar problemas de envios masivos en el servicio
+function enviarTelegram(jurisdiccion, institucion, bodyRequest){
+    
+    function sleep(milliseconds) {  
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    }
+    async function fun() {
+        for(let i = 0; i<JSON.stringify(bodyRequest.telegrams.length);i++) {          
+            await sleep(4000)
+            console.log('Enviando telegram a ' + JSON.stringify(bodyRequest.telegrams[i]))
+            sendTelegram(jurisdiccion, institucion, bodyRequest, JSON.stringify(bodyRequest.telegrams[i]))
+        }
+    }
+    fun()
+}
 
 
-app.post('/api/metasVigentes/:jurisdiccion/:institucion/:mail', (request, response) => {
+app.post('/api/metas/:jurisdiccion/:institucion', (request, response) => {
     //const note = request.body
     const jurisdiccion = request.params.jurisdiccion
     const institucion = request.params.institucion
-    const mail = request.params.mail
-    const meta = request.body
+    const bodyRequest = request.body
     
-    if (!meta || !meta.listaDeMetas){
+    if (!bodyRequest && !bodyRequest.type && (bodyRequest.mails || bodyRequest.telegrams) ){
         return response.status(400).json({
             error: 'listaDeMetas content is missing'
         })
     }
 
-    const ids = metas.map(meta => meta.id)
-    const maxId = Math.max(...ids)
 
     const newMeta = {
-        id: maxId +1,
-        metas: meta.metas,
+        metas: bodyRequest.metas,
         date: new Date().toISOString()
     }
+    // metas = metas.concat(newMeta)
 
-    metas = metas.concat(newMeta)
-    sendMail(jurisdiccion, institucion, mail, meta)
+    if(bodyRequest.mails){
+        enviarMail(jurisdiccion, institucion, bodyRequest)
+    }
+    else{
+        enviarTelegram(jurisdiccion, institucion, bodyRequest)
+    }
     response.status(201).json(newMeta)
 })
 
